@@ -51,9 +51,9 @@ public class ResultService {
         int year1 = startDate.getYear();
         int month = startDate.getMonthValue();
         int year2;
-        if (month >= 5) { // od maja
+        if (month >= 5) {
             year2 = year1 + 1;
-        } else { // styczeń-kwiecień
+        } else {
             year2 = year1;
             year1 = year1 - 1;
         }

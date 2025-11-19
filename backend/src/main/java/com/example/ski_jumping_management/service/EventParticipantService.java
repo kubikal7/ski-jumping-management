@@ -9,7 +9,9 @@ import com.example.ski_jumping_management.repository.EventRepository;
 import com.example.ski_jumping_management.repository.ResultRepository;
 import com.example.ski_jumping_management.repository.UserRepository;
 import com.example.ski_jumping_management.security.CustomUserDetails;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,7 @@ public class EventParticipantService {
     private final UserRepository userRepository;
     private final ResultRepository resultRepository;
     private final EventService eventService;
+    private final EntityManager em;
 
     public boolean hasAnyRole(CustomUserDetails userDetails, UserRole... roles) {
         if (userDetails == null || userDetails.getAuthorities() == null) return false;
@@ -66,6 +69,30 @@ public class EventParticipantService {
         return totalScore / results.size();
     }
 
+    private String calculateSeason(LocalDate startDate) {
+        int year1 = startDate.getYear();
+        int month = startDate.getMonthValue();
+        int year2;
+        if (month >= 5) {
+            year2 = year1 + 1;
+        } else {
+            year2 = year1;
+            year1 = year1 - 1;
+        }
+        return year1 + "/" + year2;
+    }
+
+    @Transactional
+    public void ensurePartitionExists(String season) {
+        String partitionName = "event_participants_" + season.replace("/", "_");
+        String sql = "DO $$ BEGIN " +
+                "IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = '" + partitionName + "') THEN " +
+                "EXECUTE 'CREATE TABLE " + partitionName + " PARTITION OF event_participants FOR VALUES IN (''" + season + "'');' ;" +
+                "END IF; " +
+                "END $$;";
+        em.createNativeQuery(sql).executeUpdate();
+    }
+
 
     public List<EventParticipant> getParticipantsByEventId(Integer eventId) {
         eventRepository.findById(eventId).orElseThrow(() -> new EntityNotFoundException("Event not found"));
@@ -79,6 +106,7 @@ public class EventParticipantService {
         return participantRepository.findByAthleteId(athleteId);
     }
 
+    @Transactional
     public EventParticipant createParticipant(EventParticipantRequest request, CustomUserDetails currentUser) {
         Event event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new EntityNotFoundException("Event not found"));
@@ -115,6 +143,9 @@ public class EventParticipantService {
         EventParticipant participant = new EventParticipant();
         participant.setEvent(event);
         participant.setAthlete(athlete);
+        participant.setSeason(calculateSeason(event.getStartDate().toLocalDate()));
+
+        ensurePartitionExists(participant.getSeason());
 
         return participantRepository.save(participant);
     }

@@ -47,24 +47,55 @@ CREATE TABLE public.event_allowed_team (
 --
 
 CREATE TABLE public.event_participants (
-    id integer NOT NULL,
-    event_id integer NOT NULL,
-    athlete_id integer NOT NULL,
-    note text
-);
+    id integer CONSTRAINT event_participants_parent_id_not_null NOT NULL,
+    event_id integer CONSTRAINT event_participants_parent_event_id_not_null NOT NULL,
+    athlete_id integer CONSTRAINT event_participants_parent_athlete_id_not_null NOT NULL,
+    season character varying(9) CONSTRAINT event_participants_parent_season_not_null NOT NULL
+)
+PARTITION BY LIST (season);
 
 
 --
--- Name: event_participants_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: event_participants_parent_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE public.event_participants ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.event_participants_id_seq
+CREATE SEQUENCE public.event_participants_parent_id_seq
+    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
-    CACHE 1
+    CACHE 1;
+
+
+--
+-- Name: event_participants_parent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.event_participants_parent_id_seq OWNED BY public.event_participants.id;
+
+
+--
+-- Name: event_participants_2025_2026; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.event_participants_2025_2026 (
+    id integer DEFAULT nextval('public.event_participants_parent_id_seq'::regclass) CONSTRAINT event_participants_parent_id_not_null NOT NULL,
+    event_id integer CONSTRAINT event_participants_parent_event_id_not_null NOT NULL,
+    athlete_id integer CONSTRAINT event_participants_parent_athlete_id_not_null NOT NULL,
+    season character varying(9) CONSTRAINT event_participants_parent_season_not_null NOT NULL
+);
+
+
+--
+-- Name: event_participants_2026_2027; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.event_participants_2026_2027 (
+    id integer DEFAULT nextval('public.event_participants_parent_id_seq'::regclass) CONSTRAINT event_participants_parent_id_not_null NOT NULL,
+    event_id integer CONSTRAINT event_participants_parent_event_id_not_null NOT NULL,
+    athlete_id integer CONSTRAINT event_participants_parent_athlete_id_not_null NOT NULL,
+    season character varying(9) CONSTRAINT event_participants_parent_season_not_null NOT NULL
 );
 
 
@@ -351,6 +382,20 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: event_participants_2025_2026; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_participants ATTACH PARTITION public.event_participants_2025_2026 FOR VALUES IN ('2025/2026');
+
+
+--
+-- Name: event_participants_2026_2027; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_participants ATTACH PARTITION public.event_participants_2026_2027 FOR VALUES IN ('2026/2027');
+
+
+--
 -- Name: results_2025_2026; Type: TABLE ATTACH; Schema: public; Owner: -
 --
 
@@ -362,6 +407,13 @@ ALTER TABLE ONLY public.results ATTACH PARTITION public.results_2025_2026 FOR VA
 --
 
 ALTER TABLE ONLY public.results ATTACH PARTITION public.results_2026_2027 FOR VALUES IN ('2026/2027');
+
+
+--
+-- Name: event_participants id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_participants ALTER COLUMN id SET DEFAULT nextval('public.event_participants_parent_id_seq'::regclass);
 
 
 --
@@ -393,30 +445,40 @@ COPY public.event_allowed_team (event_id, team_id) FROM stdin;
 18	12
 19	9
 12	9
+20	9
 \.
 
 
 --
--- Data for Name: event_participants; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: event_participants_2025_2026; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.event_participants (id, event_id, athlete_id, note) FROM stdin;
-23	7	47	\N
-24	7	28	\N
-25	7	29	\N
-26	7	31	\N
-27	7	26	\N
-28	7	25	\N
-29	7	53	\N
-30	7	39	\N
-31	7	30	\N
-32	7	34	\N
-33	7	35	\N
-34	7	27	\N
-35	16	28	\N
-36	16	31	\N
-37	16	25	\N
-38	16	29	\N
+COPY public.event_participants_2025_2026 (id, event_id, athlete_id, season) FROM stdin;
+23	7	47	2025/2026
+24	7	28	2025/2026
+25	7	29	2025/2026
+26	7	31	2025/2026
+27	7	26	2025/2026
+28	7	25	2025/2026
+29	7	53	2025/2026
+30	7	39	2025/2026
+31	7	30	2025/2026
+32	7	34	2025/2026
+33	7	35	2025/2026
+34	7	27	2025/2026
+35	16	28	2025/2026
+36	16	31	2025/2026
+37	16	25	2025/2026
+38	16	29	2025/2026
+\.
+
+
+--
+-- Data for Name: event_participants_2026_2027; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.event_participants_2026_2027 (id, event_id, athlete_id, season) FROM stdin;
+1	20	28	2026/2027
 \.
 
 
@@ -437,6 +499,7 @@ COPY public.events (id, name, type, hill_id, start_date, end_date, description, 
 18	Lokalne zawody	COMPETITION	28	2025-11-13 09:00:00	2025-11-13 12:00:00		\N	2
 19	Trening w Szczyrku 1	TRAINING	28	2025-11-12 11:00:00	2025-11-12 13:00:00		\N	1
 12	Trening w Szczyrku 2	TRAINING	28	2025-11-12 13:00:00	2025-11-12 17:00:00		\N	1
+20	Obóz w Innsbrucku	CAMP	33	2026-06-07 10:30:00	2026-06-17 10:30:00		\N	1
 \.
 
 
@@ -664,24 +727,24 @@ COPY public.users (id, first_name, last_name, login, password_hash, birth_date, 
 49	Władysław	Gofer	wladyslaw.gofer	$2a$10$IfcQM0FhiPto4c3SEuZz8.nDQb2I5j2DcU/dqfrg7wEbYhhwU6lVG	1955-02-25	Polska		\N	\N	t	2025-11-18 17:56:42.726346	f
 55	Rafał	Pies	rafal.pies	$2a$10$UlkLQEErdgvNliNalx3kh./G.qqci3dJJWxs2r3KPgnIXS8YtSuPa	1960-12-21	Polska		\N	\N	t	2025-11-18 17:58:59.139943	f
 38	Jerzy	Kokosanka	jerzy.kokosanka	$2a$10$Tu08kXJ7tSEmAeIQ7RurmeaqOJCwR1lyJ1txR7GNmwgYxJfgNN8Pe	1985-11-05	Polska		\N	\N	t	2025-11-18 17:14:29.069608	f
-2	Admin	User	admin	$2a$10$h8b2Q46oc/vp6IWTx2xxNeSw1rsnv7EOL2wV9k9IGKzJIT.BKSAvW	1990-01-01	Polish		0.00	0.00	t	2025-11-18 21:09:20.775336	f
 40	Michał	Michałek	michal.michalek	$2a$10$aJGrWSosID/x2MAQE0i9FuhQWFbbWogTV/fS8vopMCfS5d/JPxLTq	1982-03-28	Polska		\N	\N	t	2025-11-18 21:12:20.422395	f
+2	Admin	User	admin	$2a$10$h8b2Q46oc/vp6IWTx2xxNeSw1rsnv7EOL2wV9k9IGKzJIT.BKSAvW	1990-01-01	Polish		0.00	0.00	t	2025-11-19 09:41:10.916873	f
 54	Sławomir	Grzyb	slawomir.grzyb	$2a$10$6f.iF3DZZ7rfwfBO30eoquHjS/1RpkcHJAv7XJP2zY0Q2Fcf4Z89i	1955-06-11	Polska		\N	\N	t	2025-11-18 18:25:14.709037	f
 \.
 
 
 --
--- Name: event_participants_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: event_participants_parent_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.event_participants_id_seq', 38, true);
+SELECT pg_catalog.setval('public.event_participants_parent_id_seq', 1, true);
 
 
 --
 -- Name: events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.events_id_seq', 19, true);
+SELECT pg_catalog.setval('public.events_id_seq', 20, true);
 
 
 --
@@ -735,11 +798,27 @@ ALTER TABLE ONLY public.event_allowed_team
 
 
 --
--- Name: event_participants event_participants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_participants pk_event_participants; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.event_participants
-    ADD CONSTRAINT event_participants_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT pk_event_participants PRIMARY KEY (id, season);
+
+
+--
+-- Name: event_participants_2025_2026 event_participants_2025_2026_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_participants_2025_2026
+    ADD CONSTRAINT event_participants_2025_2026_pkey PRIMARY KEY (id, season);
+
+
+--
+-- Name: event_participants_2026_2027 event_participants_2026_2027_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_participants_2026_2027
+    ADD CONSTRAINT event_participants_2026_2027_pkey PRIMARY KEY (id, season);
 
 
 --
@@ -855,6 +934,20 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: event_participants_2025_2026_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.pk_event_participants ATTACH PARTITION public.event_participants_2025_2026_pkey;
+
+
+--
+-- Name: event_participants_2026_2027_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.pk_event_participants ATTACH PARTITION public.event_participants_2026_2027_pkey;
+
+
+--
 -- Name: results_2025_2026_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
 --
 
@@ -885,22 +978,6 @@ ALTER TABLE ONLY public.event_allowed_team
 
 
 --
--- Name: event_participants event_participants_athlete_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_participants
-    ADD CONSTRAINT event_participants_athlete_id_fkey FOREIGN KEY (athlete_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- Name: event_participants event_participants_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_participants
-    ADD CONSTRAINT event_participants_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
-
-
---
 -- Name: events events_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -914,6 +991,22 @@ ALTER TABLE ONLY public.events
 
 ALTER TABLE ONLY public.events
     ADD CONSTRAINT events_hill_id_fkey FOREIGN KEY (hill_id) REFERENCES public.hills(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: event_participants fk_athlete; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.event_participants
+    ADD CONSTRAINT fk_athlete FOREIGN KEY (athlete_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: event_participants fk_event; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.event_participants
+    ADD CONSTRAINT fk_event FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
 
 
 --
@@ -975,5 +1068,4 @@ ALTER TABLE ONLY public.user_roles
 --
 -- PostgreSQL database dump complete
 --
-
 

@@ -23,4 +23,7 @@ public class EventParticipant {
     @ManyToOne
     @JoinColumn(name = "athlete_id", nullable = false)
     private User athlete;
+
+    @Column(length = 9, nullable = false)
+    private String season;
 }
