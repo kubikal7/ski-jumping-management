@@ -10,7 +10,7 @@ Aplikacja do zarządzania kadrą w skokach narciarskich
 
 ![Porównanie](images/compare.png)
 
-![Event](images/evens_id1t.png)
+![Event](images/events_id1t.png)
 
 ![Drużyna](images/teams_id.png)
 
