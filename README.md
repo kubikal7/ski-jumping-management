@@ -2,18 +2,25 @@
 
 Aplikacja do zarządzania kadrą w skokach narciarskich
 
+## Diagram bazy danych
+
 <p align="center">
-  <img src="images/db.png" width="45%"/>
+  <img src="images/db.png" width="60%"/>
+</p>
+
+## Przykładowe widoki aplikacji
+
+<p align="center">
   <img src="images/calendar.png" width="45%"/>
-</p>
-
-<p align="center">
   <img src="images/athletes.png" width="45%"/>
-  <img src="images/compare.png" width="45%"/>
 </p>
 
 <p align="center">
+  <img src="images/compare.png" width="45%"/>
   <img src="images/events_id1.png" width="45%"/>
+</p>
+
+<p align="center">
   <img src="images/teams_id.png" width="45%"/>
 </p>
 
