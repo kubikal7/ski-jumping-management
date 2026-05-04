@@ -2,6 +2,18 @@
 
 Aplikacja do zarządzania kadrą w skokach narciarskich
 
+![Diagram bazy danych](images/db.png)
+
+![Kalendarz](images/calendar.png)
+
+![Zawodnicy](images/athletes.png)
+
+![Porównanie](images/compare.png)
+
+![Event](images/evens_id1t.png)
+
+![Drużyna](images/teams_id.png)
+
 ---
 
 ## Wymagania
